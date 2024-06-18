@@ -100,7 +100,7 @@ namespace TestBuild
                 }
             }
         }
-
+        //Тестовая надпись!
         private bool centerFirstMouseButton = true;
         private bool centerMouseButton = false;
         Vector2 oldCamPosition = new Vector2(0, 0);
