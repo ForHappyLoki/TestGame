@@ -67,8 +67,7 @@ namespace TestBuild
                 position = new Vector2(position.X - 1, position.Y);
             }
 
-            MouseState mouseState = Mouse.GetState();
-            CheckMouse(mouseState, gameTime);
+            CheckMouse();
 
             base.Update(gameTime);
         }
@@ -83,7 +82,7 @@ namespace TestBuild
             DrawBG();
 
             Vector2 origin = new Vector2(0, 0);
-            _spriteBatch.Draw(peasantWithSpear, CameraOffset(position), new Rectangle(0, 0, 64, 128), Color.White);
+            _spriteBatch.Draw(peasantWithSpear, position, new Rectangle(0, 0, 64, 128), Color.White);
 
             _spriteBatch.End();
             base.Draw(gameTime);
@@ -95,26 +94,27 @@ namespace TestBuild
             {
                 for(int i = 0; i < 15; i++)
                 {
-                    var pos = CameraOffset(128 * i, 128 * j);
+                    var pos = new Vector2(128 * i, 128 * j);
                     _spriteBatch.Draw(bgSand.image, pos, new Rectangle( 0, 0, (int)bgSand.imageSize.X, (int)bgSand.imageSize.Y), Color.White);
                 }
             }
         }
-        //Тестовая надпись!
+
         private bool centerFirstMouseButton = true;
         private bool centerMouseButton = false;
         Vector2 oldCamPosition = new Vector2(0, 0);
         Vector2 newCamPosition = new Vector2(0, 0);
 
         // Переменные для хранения масштаба
-        private Vector2 _mapPosition = Vector2.Zero;
+        private Vector2 _mapPosition = new Vector2(0,0);
         private float _zoom = 1.0f;
         private Vector2 _lastMousePosition;
         private bool _isPanning = false;
         private MouseState _previousMouseState;
-        protected void CheckMouse(MouseState mouseState, GameTime gameTime)
+        protected void CheckMouse()
         {
-            cursorPosition = new Vector2(mouseState.X, mouseState.Y);
+            var mouseState = Mouse.GetState();
+            var mousePosition = new Vector2(mouseState.X, mouseState.Y);
             var screenCenter = new Vector2(_graphics.PreferredBackBufferWidth / 2f, _graphics.PreferredBackBufferHeight / 2f);
 
             // Обработка масштабирования
@@ -127,13 +127,13 @@ namespace TestBuild
                 // Изменение масштаба
                 float previousZoom = _zoom;
                 _zoom += scrollDelta * 0.001f; // Настройте коэффициент для нужной скорости масштабирования
-                _zoom = MathHelper.Clamp(_zoom, 0.1f, 10f);
+                _zoom = MathHelper.Clamp(_zoom, 0.5f, 5f);
 
                 // Позиция центра экрана в мировых координатах после изменения масштаба
-                Vector2 worldAfterZoom = (screenCenter - _mapPosition) / _zoom;
+                Vector2 worldAfterZoom = worldBeforeZoom;
 
                 // Корректировка позиции карты
-                _mapPosition += (worldBeforeZoom - worldAfterZoom) * _zoom;
+                _mapPosition = screenCenter - worldAfterZoom * _zoom;
             }
 
             // Обработка перемещения
@@ -157,14 +157,6 @@ namespace TestBuild
             }
 
             _previousMouseState = mouseState;
-        }
-        protected Vector2 CameraOffset(int xOld, int yOld)
-        {
-            return new Vector2(xOld + (int)newCamPosition.X, yOld + (int)newCamPosition.Y);
-        }
-        protected Vector2 CameraOffset(Vector2 vector2)
-        {
-            return new Vector2(vector2.X + (int)newCamPosition.X, vector2.Y + (int)newCamPosition.Y);
         }
     }
 }
