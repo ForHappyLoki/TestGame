@@ -77,6 +77,8 @@ namespace TestBuild
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
+            if(_mapPosition.X > 0) { _mapPosition.X = 0; }
+            if (_mapPosition.Y > 0) { _mapPosition.Y = 0; }
             _spriteBatch.Begin(transformMatrix: Matrix.CreateTranslation(_mapPosition.X, _mapPosition.Y, 0) * Matrix.CreateScale(_zoom));
 
             DrawBG();
@@ -127,13 +129,10 @@ namespace TestBuild
                 // Изменение масштаба
                 float previousZoom = _zoom;
                 _zoom += scrollDelta * 0.001f; // Настройте коэффициент для нужной скорости масштабирования
-                _zoom = MathHelper.Clamp(_zoom, 0.5f, 5f);
-
-                // Позиция центра экрана в мировых координатах после изменения масштаба
-                Vector2 worldAfterZoom = worldBeforeZoom;
+                _zoom = MathHelper.Clamp(_zoom, 0.1f, 1f);
 
                 // Корректировка позиции карты
-                _mapPosition = screenCenter - worldAfterZoom * _zoom;
+                _mapPosition = screenCenter - worldBeforeZoom * _zoom;
             }
 
             // Обработка перемещения
