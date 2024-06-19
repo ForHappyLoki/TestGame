@@ -115,19 +115,25 @@ namespace TestBuild
         protected void CheckMouse(MouseState mouseState, GameTime gameTime)
         {
             cursorPosition = new Vector2(mouseState.X, mouseState.Y);
-            var mousePosition = new Vector2(mouseState.X, mouseState.Y);
+            var screenCenter = new Vector2(_graphics.PreferredBackBufferWidth / 2f, _graphics.PreferredBackBufferHeight / 2f);
 
             // Обработка масштабирования
             float scrollDelta = mouseState.ScrollWheelValue - _previousMouseState.ScrollWheelValue;
             if (scrollDelta != 0)
             {
+                // Позиция центра экрана в мировых координатах до изменения масштаба
+                Vector2 worldBeforeZoom = (screenCenter - _mapPosition) / _zoom;
+
+                // Изменение масштаба
                 float previousZoom = _zoom;
                 _zoom += scrollDelta * 0.001f; // Настройте коэффициент для нужной скорости масштабирования
                 _zoom = MathHelper.Clamp(_zoom, 0.1f, 10f);
 
-                // Центрирование изображения на курсоре
-                Vector2 mouseWorldPosition = (mousePosition - _mapPosition) / previousZoom;
-                _mapPosition = mousePosition - mouseWorldPosition * _zoom;
+                // Позиция центра экрана в мировых координатах после изменения масштаба
+                Vector2 worldAfterZoom = (screenCenter - _mapPosition) / _zoom;
+
+                // Корректировка позиции карты
+                _mapPosition += (worldBeforeZoom - worldAfterZoom) * _zoom;
             }
 
             // Обработка перемещения
