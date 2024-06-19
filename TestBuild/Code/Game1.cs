@@ -77,8 +77,8 @@ namespace TestBuild
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            // Применяем матрицу преобразования камеры
-            _spriteBatch.Begin(transformMatrix: _cameraTransform);
+
+            _spriteBatch.Begin(transformMatrix: Matrix.CreateTranslation(_mapPosition.X, _mapPosition.Y, 0) * Matrix.CreateScale(_zoom));
 
             DrawBG();
 
@@ -107,63 +107,50 @@ namespace TestBuild
         Vector2 newCamPosition = new Vector2(0, 0);
 
         // Переменные для хранения масштаба
-        float cameraScale = 1.0f;
-        const float minCameraScale = 0.1f;
-        const float maxCameraScale = 2.0f;
-        const float cameraScaleStep = 0.1f;
-        private int scrollValue = 0;
-        private int oldScrollValue = 0;
-        private float cameraLerpFactor = 0.2f; // Коэффициент интерполяции
-        private float cameraScaleMultiplier = 1.0f;
+        private Vector2 _mapPosition = Vector2.Zero;
+        private float _zoom = 1.0f;
+        private Vector2 _lastMousePosition;
+        private bool _isPanning = false;
+        private MouseState _previousMouseState;
         protected void CheckMouse(MouseState mouseState, GameTime gameTime)
         {
             cursorPosition = new Vector2(mouseState.X, mouseState.Y);
+            var mousePosition = new Vector2(mouseState.X, mouseState.Y);
+
+            // Обработка масштабирования
+            float scrollDelta = mouseState.ScrollWheelValue - _previousMouseState.ScrollWheelValue;
+            if (scrollDelta != 0)
+            {
+                float previousZoom = _zoom;
+                _zoom += scrollDelta * 0.001f; // Настройте коэффициент для нужной скорости масштабирования
+                _zoom = MathHelper.Clamp(_zoom, 0.1f, 10f);
+
+                // Центрирование изображения на курсоре
+                Vector2 mouseWorldPosition = (mousePosition - _mapPosition) / previousZoom;
+                _mapPosition = mousePosition - mouseWorldPosition * _zoom;
+            }
+
+            // Обработка перемещения
             if (mouseState.MiddleButton == ButtonState.Pressed)
             {
-                centerMouseButton = true;
-                if (centerFirstMouseButton)
+                if (!_isPanning)
                 {
-                    oldCamPosition = new Vector2(mouseState.X, mouseState.Y);
-                    centerFirstMouseButton = false;
+                    _isPanning = true;
+                    _lastMousePosition = mousePosition;
+                }
+                else
+                {
+                    Vector2 delta = mousePosition - _lastMousePosition;
+                    _mapPosition += delta / _zoom; // Скорость перемещения зависит от масштаба
+                    _lastMousePosition = mousePosition;
                 }
             }
             else
             {
-                centerMouseButton = false;
-                centerFirstMouseButton = true;
-                camPosition = newCamPosition;
+                _isPanning = false;
             }
-            if (centerMouseButton)
-            {
-                cameraScaleMultiplier = MathHelper.Clamp(cameraScale, minCameraScale, maxCameraScale) / 1.0f;
-                newCamPosition.X = MathHelper.Lerp(newCamPosition.X, camPosition.X - (oldCamPosition.X - mouseState.X) * cameraScaleMultiplier, cameraLerpFactor);
-                newCamPosition.Y = MathHelper.Lerp(newCamPosition.Y, camPosition.Y - (oldCamPosition.Y - mouseState.Y) * cameraScaleMultiplier, cameraLerpFactor);
-            }
-            // Если колесо мыши прокручено
-            scrollValue = mouseState.ScrollWheelValue;
-            if (scrollValue != oldScrollValue)
-            {
-                // Увеличиваем или уменьшаем масштаб камеры на фиксированное значение
-                if (scrollValue > oldScrollValue)
-                {
-                    cameraScale = MathHelper.Clamp(cameraScale + cameraScaleStep, minCameraScale, maxCameraScale);
-                    oldScrollValue = scrollValue;
-                }
-                else if (scrollValue < oldScrollValue)
-                {
-                    cameraScale = MathHelper.Clamp(cameraScale - cameraScaleStep, minCameraScale, maxCameraScale);
-                    oldScrollValue = scrollValue;
-                }
 
-
-                // Вычисляем смещение камеры, чтобы она была центрирована относительно курсора
-                float translationX = (GraphicsDevice.Viewport.Width / 20.0f) - (cursorPosition.X * cameraScale);
-                float translationY = (GraphicsDevice.Viewport.Height / 20.0f) - (cursorPosition.Y * cameraScale);
-
-                // Создаем матрицу преобразования для камеры
-                _cameraTransform = Matrix.CreateTranslation(translationX, translationY, 0) *
-                                   Matrix.CreateScale(cameraScale, cameraScale, 1);
-            }
+            _previousMouseState = mouseState;
         }
         protected Vector2 CameraOffset(int xOld, int yOld)
         {
