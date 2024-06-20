@@ -31,6 +31,7 @@ namespace TestBuild.Code
     }
     internal class GameObjects : ModelOnMap
     {
+
         public GameObjects(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image) 
             : base(AbsolutePosition, ImageSize, Image)
         {
