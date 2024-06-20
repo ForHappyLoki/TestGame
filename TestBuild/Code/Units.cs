@@ -1,14 +1,14 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TestBuild.Code
 {
-    internal abstract class ModelOnMap
+    public abstract class ModelOnMap
     {
         public bool collision;
         public Vector2 absolutePosition { get; set; }
@@ -29,13 +29,13 @@ namespace TestBuild.Code
             base.collision = false;
         }
     }
-    internal class GameObjects : ModelOnMap
+    public class GameObjects : ModelOnMap
     {
-
+        public Rectangle collisionRectangle { get; set; }
         public GameObjects(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image) 
             : base(AbsolutePosition, ImageSize, Image)
         {
-
+            collisionRectangle = new Rectangle((int)AbsolutePosition.X, (int)AbsolutePosition.Y + (int)ImageSize.Y / 2, (int)ImageSize.X, (int)ImageSize.Y/2);
         }
     }
     internal class Units : GameObjects

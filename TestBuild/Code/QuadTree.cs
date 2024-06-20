@@ -1,13 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using TestBuild.Code;
 
 public class QuadTreeNode
 {
     private const int MAX_OBJECTS = 4;
-    private const int MAX_LEVELS = 5;
+    private const int MAX_LEVELS = 6;
 
     private int level;
-    private List<Rectangle> objects;
+    private List<GameObjects> objects;
     private Rectangle bounds;
     private QuadTreeNode[] nodes;
 
@@ -15,7 +16,7 @@ public class QuadTreeNode
     {
         this.level = level;
         this.bounds = bounds;
-        this.objects = new List<Rectangle>();
+        this.objects = new List<GameObjects>();
         this.nodes = new QuadTreeNode[4];
     }
 
@@ -45,16 +46,16 @@ public class QuadTreeNode
         nodes[3] = new QuadTreeNode(level + 1, new Rectangle(x + subWidth, y + subHeight, subWidth, subHeight));
     }
 
-    private int GetIndex(Rectangle pRect)
+    private int GetIndex(GameObjects pRect)
     {
         int index = -1;
         double verticalMidpoint = bounds.X + (bounds.Width / 2);
         double horizontalMidpoint = bounds.Y + (bounds.Height / 2);
 
-        bool topQuadrant = (pRect.Y < horizontalMidpoint && pRect.Y + pRect.Height < horizontalMidpoint);
-        bool bottomQuadrant = (pRect.Y > horizontalMidpoint);
+        bool topQuadrant = (pRect.collisionRectangle.Y < horizontalMidpoint && pRect.collisionRectangle.Y + pRect.collisionRectangle.Height < horizontalMidpoint);
+        bool bottomQuadrant = (pRect.collisionRectangle.Y > horizontalMidpoint);
 
-        if (pRect.X < verticalMidpoint && pRect.X + pRect.Width < verticalMidpoint)
+        if (pRect.collisionRectangle.X < verticalMidpoint && pRect.collisionRectangle.X + pRect.collisionRectangle.Width < verticalMidpoint)
         {
             if (topQuadrant)
             {
@@ -65,7 +66,7 @@ public class QuadTreeNode
                 index = 2;
             }
         }
-        else if (pRect.X > verticalMidpoint)
+        else if (pRect.collisionRectangle.X > verticalMidpoint)
         {
             if (topQuadrant)
             {
@@ -80,7 +81,7 @@ public class QuadTreeNode
         return index;
     }
 
-    public void Insert(Rectangle pRect)
+    public void Insert(GameObjects pRect)
     {
         if (nodes[0] != null)
         {
@@ -119,7 +120,7 @@ public class QuadTreeNode
         }
     }
 
-    public List<Rectangle> Retrieve(List<Rectangle> returnObjects, Rectangle pRect)
+    public List<GameObjects> Retrieve(List<GameObjects> returnObjects, GameObjects pRect)
     {
         int index = GetIndex(pRect);
         if (index != -1 && nodes[0] != null)
@@ -144,13 +145,13 @@ public class QuadTree
     {
         root.Clear();
     }
-    public void Insert(Rectangle pRect)
+    public void Insert(GameObjects pRect)
     {
         root.Insert(pRect);
     }
-    public List<Rectangle> Retrieve(Rectangle pRect)
+    public List<GameObjects> Retrieve(GameObjects pRect)
     {
-        List<Rectangle> returnObjects = new List<Rectangle>();
+        List<GameObjects> returnObjects = new List<GameObjects>();
         return root.Retrieve(returnObjects, pRect);
     }
 }

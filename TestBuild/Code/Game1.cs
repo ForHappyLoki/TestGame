@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using TestBuild.Code;
 
@@ -12,8 +13,6 @@ namespace TestBuild
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        public Texture2D peasantWithSpear;
-        public Texture2D sandBG;
         Vector2 position = new Vector2(110, 110);
         Vector2 camPosition = new Vector2(0, 0);
 
@@ -36,6 +35,8 @@ namespace TestBuild
 
             // Применяем изменения
             _graphics.ApplyChanges();
+            CollisionHandler.CollisionLoader(2000, 2000);
+
             base.Initialize();
         }
 
@@ -45,12 +46,18 @@ namespace TestBuild
 
             // TODO: use this.Content to load your game content here
 
-            peasantWithSpear = Content.Load<Texture2D>("Units/PeasantWithSpear");
+            var peasantWithSpear = Content.Load<Texture2D>("Units/PeasantWithSpear");
             DataLoader.TextureListAdd(peasantWithSpear, "peasantWithSpear");
             var sandBG = Content.Load<Texture2D>("BG/SandBG");
             DataLoader.TextureListAdd(sandBG, "sandBG");
-        }
 
+
+            for(int i  = 0; i < 10; i++)
+            {
+                DataLoader.CreatePeasantWithSpear(new Vector2(100*i, 100));
+            }
+        }
+        private List<GameObjects> _potentialCollisions;
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -68,7 +75,7 @@ namespace TestBuild
             }
 
             CheckMouse();
-
+            _potentialCollisions = CollisionHandler.CollisionUpdater();
             base.Update(gameTime);
         }
         private Vector2 cursorPosition;
@@ -83,8 +90,17 @@ namespace TestBuild
 
             DrawBG();
 
+            foreach(CommonUnits commonUnits in DataLoader.PeasantsWithSpear)
+            {
+                _spriteBatch.Draw(commonUnits.image, commonUnits.absolutePosition, new Rectangle(0, 0, (int)commonUnits.imageSize.X, (int)commonUnits.imageSize.Y), Color.White);
+            }
+            foreach(GameObjects unit in _potentialCollisions)
+            {
+                _spriteBatch.Draw(unit.image, unit.absolutePosition, new Rectangle(0, 0, (int)unit.imageSize.X, (int)unit.imageSize.Y), Color.Red);
+            }
+
             Vector2 origin = new Vector2(0, 0);
-            _spriteBatch.Draw(peasantWithSpear, position, new Rectangle(0, 0, 64, 128), Color.White);
+            //
 
             _spriteBatch.End();
             base.Draw(gameTime);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace TestBuild.Code
@@ -11,6 +12,7 @@ namespace TestBuild.Code
     {
         private static List<Texture2D> textureList = new List<Texture2D>();
         private static List<string> textureListName = new List<string>();
+        private static List<GameObjects> gameObjectsList = new List<GameObjects>();
 
         private static BGImage bGImage;
 
@@ -39,6 +41,12 @@ namespace TestBuild.Code
                 bGImage = SandBGCreator.Create();
             }
             return bGImage;
+        }
+        public static List<CommonUnits> PeasantsWithSpear = new List<CommonUnits>();
+        public static void CreatePeasantWithSpear(Vector2 position)
+        {
+            var peasantWithSpear = PeasantWithSpearCreator.Create(position);
+            PeasantsWithSpear.Add(peasantWithSpear);
         }
     }
 }
