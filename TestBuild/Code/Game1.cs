@@ -99,9 +99,10 @@ namespace TestBuild
                 _spriteBatch.Draw(unit.image, unit.absolutePosition, new Rectangle(0, 0, (int)unit.imageSize.X, (int)unit.imageSize.Y), Color.Red);
             }
 
-            Vector2 origin = new Vector2(0, 0);
-            //
-
+            DrawStrokePanel();
+            _spriteBatch.End();
+            _spriteBatch.Begin();
+            DrawStrokePanel();
             _spriteBatch.End();
             base.Draw(gameTime);
         }
@@ -123,16 +124,20 @@ namespace TestBuild
         Vector2 oldCamPosition = new Vector2(0, 0);
         Vector2 newCamPosition = new Vector2(0, 0);
 
+        private Vector2 mousePosition = new Vector2(0, 0);
+
         // Переменные для хранения масштаба
         private Vector2 _mapPosition = new Vector2(0,0);
         private float _zoom = 1.0f;
         private Vector2 _lastMousePosition;
         private bool _isPanning = false;
         private MouseState _previousMouseState;
+        private bool _frameIt = false;
+        private Vector2 _frameItFirstPosition = new Vector2(0, 0);
         protected void CheckMouse()
         {
             var mouseState = Mouse.GetState();
-            var mousePosition = new Vector2(mouseState.X, mouseState.Y);
+            mousePosition = new Vector2(mouseState.X, mouseState.Y);
             var screenCenter = new Vector2(_graphics.PreferredBackBufferWidth / 2f, _graphics.PreferredBackBufferHeight / 2f);
 
             // Обработка масштабирования
@@ -171,7 +176,53 @@ namespace TestBuild
                 _isPanning = false;
             }
 
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                if (!_frameIt)
+                {
+                    _frameItFirstPosition = mousePosition;
+                }
+                _frameIt = true;
+            }
+            else
+            {
+                _frameIt = false;
+            }
+
             _previousMouseState = mouseState;
+        }
+        private Rectangle _strokePanel = new Rectangle();
+        protected void DrawStrokePanel()
+        {
+            if (_frameIt)
+            {
+                int strokePanelx;
+                int strokePanely;
+                int strokePanelHeight;
+                int strokePanelWidth;
+                if (mousePosition.X > _frameItFirstPosition.X)
+                {
+                    strokePanelx = (int)_frameItFirstPosition.X;
+                    strokePanelHeight = (int)mousePosition.X - (int)_frameItFirstPosition.X;
+                }
+                else
+                {
+                    strokePanelx = (int)mousePosition.X;
+                    strokePanelHeight = -((int)mousePosition.X - (int)_frameItFirstPosition.X);
+                }
+                if (mousePosition.Y > _frameItFirstPosition.Y)
+                {
+                    strokePanely = (int)_frameItFirstPosition.Y;
+                    strokePanelWidth = (int)mousePosition.Y - (int)_frameItFirstPosition.Y;
+                }
+                else
+                {
+                    strokePanely = (int)mousePosition.Y;
+                    strokePanelWidth = -((int)mousePosition.Y - (int)_frameItFirstPosition.Y);
+                }
+                _strokePanel = new Rectangle(strokePanelx, strokePanely, strokePanelHeight, strokePanelWidth);
+                _spriteBatch.DrawRectangle(_strokePanel, Color.White);
+            }
         }
     }
 }

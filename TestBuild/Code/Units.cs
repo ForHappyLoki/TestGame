@@ -38,7 +38,15 @@ namespace TestBuild.Code
             collisionRectangle = new Rectangle((int)AbsolutePosition.X, (int)AbsolutePosition.Y + (int)ImageSize.Y / 2, (int)ImageSize.X, (int)ImageSize.Y/2);
         }
     }
-    internal class Units : GameObjects
+    public class StrokePanel : GameObjects
+    {
+        public StrokePanel(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
+    : base(AbsolutePosition, ImageSize, Image)
+        {
+            collisionRectangle = new Rectangle((int)AbsolutePosition.X, (int)AbsolutePosition.Y + (int)ImageSize.Y / 2, (int)ImageSize.X, (int)ImageSize.Y / 2);
+        }
+    }
+    public class Units : GameObjects
     {
         public int speed { get; set; }
         public int damage { get; set; }
@@ -51,7 +59,7 @@ namespace TestBuild.Code
             this.hp = hp;
         }
     }
-    internal class CommonUnits : Units
+    public class CommonUnits : Units
     {
         public CommonUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
             : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
@@ -59,14 +67,14 @@ namespace TestBuild.Code
 
         }
     }
-    internal class HeroUnits : Units
+    public class HeroUnits : Units
     {
         public HeroUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
             : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
         {
         }
     }
-    internal class BuildUnits : Units
+    public class BuildUnits : Units
     {
         public BuildUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
             : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
