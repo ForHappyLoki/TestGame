@@ -16,25 +16,30 @@ namespace TestBuild.Code
             // Инициализация QuadTree
             _quadTree = new QuadTree(new Rectangle(0, 0, width, height));
         }
-        public static List<GameObjects> CollisionUpdater()
+        public static List<GameObjects[]> CollisionUpdater()
         {
-            List<GameObjects> _potentialCollisions = new List<GameObjects>();
+            List<GameObjects[]> _potentialCollisions = new List<GameObjects[]>();
             // Очистка QuadTree и вставка объектов заново
             _quadTree.Clear();
-            foreach (var obj in DataLoader.PeasantsWithSpear)
+            foreach (var obj in DataLoader.GAME_OBJECTS)
             {
                 _quadTree.Insert(obj);
             }
             // Проверка потенциальных столкновений
             _potentialCollisions.Clear();
-            foreach (var obj in DataLoader.PeasantsWithSpear)
+            foreach (var obj in DataLoader.GAME_OBJECTS)
             {
+                if (obj is Units)
+                {
+                    Units _obj = (Units)obj;
+                    _obj.isSelect = false;
+                }
                 var collisions = _quadTree.Retrieve(obj);
                 foreach (var collision in collisions)
                 {
                     if (obj != collision && obj.collisionRectangle.Intersects(collision.collisionRectangle))
                     {
-                        _potentialCollisions.Add(collision);
+                        _potentialCollisions.Add(new GameObjects[] { collision, obj });
                     }
                 }
             }

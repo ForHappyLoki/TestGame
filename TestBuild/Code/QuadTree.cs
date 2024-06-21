@@ -5,7 +5,7 @@ using TestBuild.Code;
 public class QuadTreeNode
 {
     private const int MAX_OBJECTS = 4;
-    private const int MAX_LEVELS = 6;
+    private const int MAX_LEVELS = 7;
 
     private int level;
     private List<GameObjects> objects;

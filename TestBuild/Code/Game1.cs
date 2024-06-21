@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using TestBuild.Code;
 
 namespace TestBuild
@@ -57,7 +58,7 @@ namespace TestBuild
                 DataLoader.CreatePeasantWithSpear(new Vector2(100*i, 100));
             }
         }
-        private List<GameObjects> _potentialCollisions;
+        private List<GameObjects[]> _potentialCollisions;
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -76,6 +77,28 @@ namespace TestBuild
 
             CheckMouse();
             _potentialCollisions = CollisionHandler.CollisionUpdater();
+            foreach (var collision in _potentialCollisions)
+            {
+                bool findStrokePanel = false;
+                bool findUnits = false;
+                Units unit = null;
+                foreach (var obj in collision)
+                {
+                    if (obj is StrokePanel)
+                    {
+                        findStrokePanel = true;
+                    }
+                    if (obj is Units)
+                    {
+                        findUnits = true;
+                        unit = obj as Units;
+                    }
+                }
+                if (findStrokePanel && findUnits && unit != null)
+                {
+                    unit.isSelect = true;
+                }
+            }
             base.Update(gameTime);
         }
         private Vector2 cursorPosition;
@@ -90,20 +113,24 @@ namespace TestBuild
 
             DrawBG();
 
-            foreach(CommonUnits commonUnits in DataLoader.PeasantsWithSpear)
+            foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
             {
-                _spriteBatch.Draw(commonUnits.image, commonUnits.absolutePosition, new Rectangle(0, 0, (int)commonUnits.imageSize.X, (int)commonUnits.imageSize.Y), Color.White);
-            }
-            foreach(GameObjects unit in _potentialCollisions)
-            {
-                _spriteBatch.Draw(unit.image, unit.absolutePosition, new Rectangle(0, 0, (int)unit.imageSize.X, (int)unit.imageSize.Y), Color.Red);
+                if (gameObjects.isSelect)
+                {
+                    _spriteBatch.Draw(gameObjects.image, gameObjects.absolutePosition, new Rectangle(0, 0, (int)gameObjects.imageSize.X, (int)gameObjects.imageSize.Y), Color.Red);
+                }
+                else
+                {
+                    _spriteBatch.Draw(gameObjects.image, gameObjects.absolutePosition, new Rectangle(0, 0, (int)gameObjects.imageSize.X, (int)gameObjects.imageSize.Y), Color.White);
+                }
             }
 
-            DrawStrokePanel();
             _spriteBatch.End();
+            /////////
             _spriteBatch.Begin();
             DrawStrokePanel();
             _spriteBatch.End();
+            /////////
             base.Draw(gameTime);
         }
         protected void DrawBG()
@@ -119,7 +146,6 @@ namespace TestBuild
             }
         }
 
-        private bool centerFirstMouseButton = true;
         private bool centerMouseButton = false;
         Vector2 oldCamPosition = new Vector2(0, 0);
         Vector2 newCamPosition = new Vector2(0, 0);
@@ -191,7 +217,9 @@ namespace TestBuild
 
             _previousMouseState = mouseState;
         }
-        private Rectangle _strokePanel = new Rectangle();
+        private Rectangle _trueStrokePanel = new Rectangle();
+        private StrokePanel _strokePanel = new StrokePanel(new Rectangle());
+        private bool selectedIsActivity;
         protected void DrawStrokePanel()
         {
             if (_frameIt)
@@ -220,8 +248,11 @@ namespace TestBuild
                     strokePanely = (int)mousePosition.Y;
                     strokePanelWidth = -((int)mousePosition.Y - (int)_frameItFirstPosition.Y);
                 }
-                _strokePanel = new Rectangle(strokePanelx, strokePanely, strokePanelHeight, strokePanelWidth);
-                _spriteBatch.DrawRectangle(_strokePanel, Color.White);
+                _trueStrokePanel = new Rectangle((int)(strokePanelx /_zoom - _mapPosition.X ), (int)(strokePanely / _zoom - _mapPosition.Y ), 
+                    (int)(strokePanelHeight/ _zoom), (int)(strokePanelWidth/ _zoom));
+                _strokePanel.CollisionRectangleUpdate(_trueStrokePanel);
+                var strokePanel = new Rectangle(strokePanelx, strokePanely, strokePanelHeight, strokePanelWidth);
+                _spriteBatch.DrawRectangle(strokePanel, Color.White);
             }
         }
     }

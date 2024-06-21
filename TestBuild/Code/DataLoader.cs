@@ -42,11 +42,12 @@ namespace TestBuild.Code
             }
             return bGImage;
         }
-        public static List<CommonUnits> PeasantsWithSpear = new List<CommonUnits>();
+        public static List<GameObjects> GAME_OBJECTS = new List<GameObjects>();
+        public static List<Units> UNIT_OBJECTS = new List<Units>();
         public static void CreatePeasantWithSpear(Vector2 position)
         {
             var peasantWithSpear = PeasantWithSpearCreator.Create(position);
-            PeasantsWithSpear.Add(peasantWithSpear);
+            GAME_OBJECTS.Add(peasantWithSpear);
         }
     }
 }

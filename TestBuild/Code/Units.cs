@@ -31,19 +31,27 @@ namespace TestBuild.Code
     }
     public class GameObjects : ModelOnMap
     {
+        private static int _curentlyID = 0;
+        public int _ID;
         public Rectangle collisionRectangle { get; set; }
         public GameObjects(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image) 
             : base(AbsolutePosition, ImageSize, Image)
         {
             collisionRectangle = new Rectangle((int)AbsolutePosition.X, (int)AbsolutePosition.Y + (int)ImageSize.Y / 2, (int)ImageSize.X, (int)ImageSize.Y/2);
+            _ID = _curentlyID++;
+            DataLoader.GAME_OBJECTS.Add(this);
         }
     }
     public class StrokePanel : GameObjects
     {
-        public StrokePanel(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
-    : base(AbsolutePosition, ImageSize, Image)
+        public StrokePanel(Rectangle rectangleCollision)
+            : base(new Vector2(), new Vector2(), null)
         {
-            collisionRectangle = new Rectangle((int)AbsolutePosition.X, (int)AbsolutePosition.Y + (int)ImageSize.Y / 2, (int)ImageSize.X, (int)ImageSize.Y / 2);
+            collisionRectangle = rectangleCollision;
+        }
+        public void CollisionRectangleUpdate(Rectangle rectangle)
+        {
+            collisionRectangle = rectangle;
         }
     }
     public class Units : GameObjects
@@ -51,12 +59,14 @@ namespace TestBuild.Code
         public int speed { get; set; }
         public int damage { get; set; }
         public int hp { get; set; }
+        public bool isSelect = false;
         public Units(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
             : base(AbsolutePosition, ImageSize, Image)
         {
             this.speed = speed;
             this.damage = damage;
             this.hp = hp;
+            DataLoader.UNIT_OBJECTS.Add(this);
         }
     }
     public class CommonUnits : Units
@@ -67,18 +77,18 @@ namespace TestBuild.Code
 
         }
     }
-    public class HeroUnits : Units
-    {
-        public HeroUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
-            : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
-        {
-        }
-    }
-    public class BuildUnits : Units
-    {
-        public BuildUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
-            : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
-        {
-        }
-    }
+    //public class HeroUnits : Units
+    //{
+    //    public HeroUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
+    //        : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
+    //    {
+    //    }
+    //}
+    //public class BuildUnits : Units
+    //{
+    //    public BuildUnits(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
+    //        : base(AbsolutePosition, ImageSize, Image, speed, damage, hp)
+    //    {
+    //    }
+    //}
 }
