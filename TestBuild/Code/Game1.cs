@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using TestBuild.Code;
+using System.Linq;
 
 namespace TestBuild
 {
@@ -64,19 +65,29 @@ namespace TestBuild
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
-            //angle += 0.01f;
-
-            KeyboardState state = Keyboard.GetState();
-            bool leftArrowKeyDown = state.IsKeyDown(Keys.Left);
-
-            if (leftArrowKeyDown)
-            {
-                position = new Vector2(position.X - 1, position.Y);
-            }
-
+            CheckKeyboard();
             CheckMouse();
+            //Кусок ниже снимает селект со всех юнитов, выборка селекта ниже
+            if (_deselectionUnits || _frameIt)
+            {
+                _deselectionUnits = false;
+                DataLoader.GAME_OBJECTS.OfType<Units>()
+                    .ToList()
+                    .ForEach(b => b.isSelect = false);
+            }
+            if (_orderActivation)
+            {
+                _orderActivation = false;
+                DataLoader.GAME_OBJECTS.OfType<Units>()
+                    .Where(b => b.isSelect)
+                    .ToList()
+                    .ForEach(b => b.SetTargerToMove(_orderPosition));
+            }
+            DataLoader.GAME_OBJECTS.OfType<Units>()
+                .ToList()
+                .ForEach(b => b.UnitUpdate());
             _potentialCollisions = CollisionHandler.CollisionUpdater();
+            //Кусок ниже перебирает все пересечения
             foreach (var collision in _potentialCollisions)
             {
                 bool findStrokePanel = false;
@@ -94,11 +105,13 @@ namespace TestBuild
                         unit = obj as Units;
                     }
                 }
+                //Кусок ниже селектит юнита, если он обведен в рамочку
                 if (findStrokePanel && findUnits && unit != null)
                 {
                     unit.isSelect = true;
                 }
             }
+            DataLoader.UNIT_OBJECTS.Sort((x, y) => x.absolutePosition.Y.CompareTo(y.absolutePosition.Y));
             base.Update(gameTime);
         }
         private Vector2 cursorPosition;
@@ -115,14 +128,16 @@ namespace TestBuild
 
             foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
             {
+                Color color;
                 if (gameObjects.isSelect)
                 {
-                    _spriteBatch.Draw(gameObjects.image, gameObjects.absolutePosition, new Rectangle(0, 0, (int)gameObjects.imageSize.X, (int)gameObjects.imageSize.Y), Color.Red);
+                    color = Color.Red;
                 }
                 else
                 {
-                    _spriteBatch.Draw(gameObjects.image, gameObjects.absolutePosition, new Rectangle(0, 0, (int)gameObjects.imageSize.X, (int)gameObjects.imageSize.Y), Color.White);
+                    color = Color.White;
                 }
+                _spriteBatch.Draw(gameObjects.image, gameObjects.absolutePosition, new Rectangle(0, 0, (int)gameObjects.imageSize.X, (int)gameObjects.imageSize.Y), color);
             }
 
             _spriteBatch.End();
@@ -150,9 +165,15 @@ namespace TestBuild
         Vector2 oldCamPosition = new Vector2(0, 0);
         Vector2 newCamPosition = new Vector2(0, 0);
 
+        protected void CheckKeyboard()
+        {
+            KeyboardState state = Keyboard.GetState();
+            bool leftArrowKeyDown = state.IsKeyDown(Keys.Left);
+        }
+        // Переменные управления мышью
+        // Переменные для хранения масштаба
         private Vector2 mousePosition = new Vector2(0, 0);
 
-        // Переменные для хранения масштаба
         private Vector2 _mapPosition = new Vector2(0,0);
         private float _zoom = 1.0f;
         private Vector2 _lastMousePosition;
@@ -160,6 +181,10 @@ namespace TestBuild
         private MouseState _previousMouseState;
         private bool _frameIt = false;
         private Vector2 _frameItFirstPosition = new Vector2(0, 0);
+        private bool _deselectionUnits = false;
+        private Vector2 _orderPosition = new Vector2(0, 0);
+        private bool _orderActivation = false;
+        private bool _rightButtonON = false;
         protected void CheckMouse()
         {
             var mouseState = Mouse.GetState();
@@ -206,15 +231,23 @@ namespace TestBuild
             {
                 if (!_frameIt)
                 {
+                    _deselectionUnits = true;
                     _frameItFirstPosition = mousePosition;
                 }
                 _frameIt = true;
             }
-            else
+            else if (mouseState.LeftButton != ButtonState.Pressed)
             {
                 _frameIt = false;
+                _strokePanel.CollisionRectangleUpdate(new Rectangle(0, 0, 0, 0));
             }
 
+            if (mouseState.RightButton == ButtonState.Pressed)
+            {
+                //_rightButtonON = true;
+                _orderPosition = (mousePosition / _zoom - _mapPosition);
+                _orderActivation = true;
+            }    
             _previousMouseState = mouseState;
         }
         private Rectangle _trueStrokePanel = new Rectangle();

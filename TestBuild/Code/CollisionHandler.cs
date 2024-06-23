@@ -29,11 +29,6 @@ namespace TestBuild.Code
             _potentialCollisions.Clear();
             foreach (var obj in DataLoader.GAME_OBJECTS)
             {
-                if (obj is Units)
-                {
-                    Units _obj = (Units)obj;
-                    _obj.isSelect = false;
-                }
                 var collisions = _quadTree.Retrieve(obj);
                 foreach (var collision in collisions)
                 {

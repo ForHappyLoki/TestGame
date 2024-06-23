@@ -43,7 +43,7 @@ namespace TestBuild.Code
             {
                 peasantWithSpear = DataLoader.TextureListFind("peasantWithSpear");
             }
-            return new CommonUnits(location, new Vector2(peasantWithSpear.Width, peasantWithSpear.Height), peasantWithSpear, 1, 1, 1);
+            return new CommonUnits(location, new Vector2(peasantWithSpear.Width, peasantWithSpear.Height), peasantWithSpear, 2, 1, 1);
         }
     }
 }
