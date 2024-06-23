@@ -14,6 +14,8 @@ namespace TestBuild.Code
         public Vector2 absolutePosition { get; set; }
         public Vector2 imageSize { get; set; }
         public Texture2D image { get; set; }
+        public Texture2D mirriredImage;
+        public Texture2D normalImage;
         public ModelOnMap(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image)
         {
             absolutePosition = AbsolutePosition;
@@ -58,11 +60,10 @@ namespace TestBuild.Code
     public class Units : GameObjects
     {
         public int speed { get; set; }
-        public float currentSpeed = 0;
         public int damage { get; set; }
         public int hp { get; set; }
         public int moral { get; set; }
-        public bool isSelect = false;
+        private bool isSelect = false;
         private float _angle;
         private bool _onMove = false;
         public Units(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
@@ -81,6 +82,20 @@ namespace TestBuild.Code
                 Move();
             }
         }
+        public void SelectingUnit()
+        {
+            isSelect = true;
+            DataLoader.SELECT_UNITS.Add(this);
+        }
+        public void UnselectingUnit()
+        {
+            isSelect = false;
+            DataLoader.SELECT_UNITS.Remove(this);
+        }
+        public bool SelectingReturn()
+        {
+            return isSelect;
+        }
         public void SetTargerToMove(Vector2 target)
         {
             targetToMove = target;
@@ -90,8 +105,8 @@ namespace TestBuild.Code
         public float CalculatingTheAngle()
         {
             _angle = HelpMethods.AngleBetweenPoints(centerOfModel, targetToMove);
-            _xOffset = currentSpeed * (float)Math.Cos(_angle);
-            _yOffset = currentSpeed * (float)Math.Sin(_angle);
+            _xOffset = speed * (float)Math.Cos(_angle);
+            _yOffset = speed * (float)Math.Sin(_angle);
             _offset = new Vector2(_xOffset, _yOffset);
             return _angle;
         }
@@ -105,14 +120,9 @@ namespace TestBuild.Code
             if (Vector2.Distance(centerOfModel, targetToMove) <= (speed + 1)/2.0)
             {
                 _onMove = false;
-                currentSpeed = 0;
             }
             else
             {
-                if (currentSpeed < speed)
-                {
-                    currentSpeed += 0.2f;
-                }
                 absolutePosition = absolutePosition + _offset;
                 centerOfModel = centerOfModel + _offset;
                 collisionRectangle = new Rectangle((int) absolutePosition.X + (int)_xOffset, (int) absolutePosition.Y + (int) imageSize.Y / 2 + (int)_yOffset, (int)imageSize.X, (int)imageSize.Y / 2);

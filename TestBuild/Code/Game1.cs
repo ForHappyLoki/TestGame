@@ -67,19 +67,30 @@ namespace TestBuild
 
             CheckKeyboard();
             CheckMouse();
+            if (_rightButtonON)
+            {
+                if (DataLoader.SELECT_UNITS.Count > 0)
+                {
+                    if (!groupAccommodationMode)
+                    {
+                        groupAccommodationMode = true;
+                    }
+                    GroupAccommodationMode();
+                }
+            }
             //Кусок ниже снимает селект со всех юнитов, выборка селекта ниже
             if (_deselectionUnits || _frameIt)
             {
                 _deselectionUnits = false;
                 DataLoader.GAME_OBJECTS.OfType<Units>()
                     .ToList()
-                    .ForEach(b => b.isSelect = false);
+                    .ForEach(b => b.UnselectingUnit());
             }
             if (_orderActivation)
             {
                 _orderActivation = false;
                 DataLoader.GAME_OBJECTS.OfType<Units>()
-                    .Where(b => b.isSelect)
+                    .Where(b => b.SelectingReturn())
                     .ToList()
                     .ForEach(b => b.SetTargerToMove(_orderPosition));
             }
@@ -108,7 +119,7 @@ namespace TestBuild
                 //Кусок ниже селектит юнита, если он обведен в рамочку
                 if (findStrokePanel && findUnits && unit != null)
                 {
-                    unit.isSelect = true;
+                    unit.SelectingUnit();
                 }
             }
             DataLoader.UNIT_OBJECTS.Sort((x, y) => x.absolutePosition.Y.CompareTo(y.absolutePosition.Y));
@@ -125,11 +136,18 @@ namespace TestBuild
             _spriteBatch.Begin(transformMatrix: Matrix.CreateTranslation(_mapPosition.X, _mapPosition.Y, 0) * Matrix.CreateScale(_zoom));
 
             DrawBG();
-
+            
+            foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
+            {
+                if (gameObjects.SelectingReturn() && _zoom > 0.5)
+                {
+                    _spriteBatch.DrawRectangle(gameObjects.collisionRectangle, Color.White);
+                }
+            }
             foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
             {
                 Color color;
-                if (gameObjects.isSelect)
+                if (gameObjects.SelectingReturn())
                 {
                     color = Color.Red;
                 }
@@ -185,6 +203,8 @@ namespace TestBuild
         private Vector2 _orderPosition = new Vector2(0, 0);
         private bool _orderActivation = false;
         private bool _rightButtonON = false;
+        private Vector2 _startGroupAccommodationModePosition;
+        private Vector2 _endGroupAccommodationModePosition;
         protected void CheckMouse()
         {
             var mouseState = Mouse.GetState();
@@ -244,9 +264,17 @@ namespace TestBuild
 
             if (mouseState.RightButton == ButtonState.Pressed)
             {
-                //_rightButtonON = true;
-                _orderPosition = (mousePosition / _zoom - _mapPosition);
-                _orderActivation = true;
+                _rightButtonON = true;
+                if (DataLoader.SELECT_UNITS.Count > 0)
+                {
+                    _orderPosition = (mousePosition / _zoom - _mapPosition);
+                    if (!_orderActivation)
+                    {
+                        _startGroupAccommodationModePosition = _orderPosition;
+                    }
+                    _endGroupAccommodationModePosition = _orderPosition;
+                    _orderActivation = true;
+                }
             }    
             _previousMouseState = mouseState;
         }
@@ -287,6 +315,12 @@ namespace TestBuild
                 var strokePanel = new Rectangle(strokePanelx, strokePanely, strokePanelHeight, strokePanelWidth);
                 _spriteBatch.DrawRectangle(strokePanel, Color.White);
             }
+        }
+        private bool groupAccommodationMode = false;
+        private float accommodationDistance;
+        public void GroupAccommodationMode()
+        {
+            accommodationDistance = Vector2.Distance(_startGroupAccommodationModePosition, _endGroupAccommodationModePosition);
         }
     }
 }

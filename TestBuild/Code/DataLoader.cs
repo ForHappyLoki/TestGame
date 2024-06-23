@@ -44,6 +44,17 @@ namespace TestBuild.Code
         }
         public static List<GameObjects> GAME_OBJECTS = new List<GameObjects>();
         public static List<Units> UNIT_OBJECTS = new List<Units>();
+        public static List<Units> SELECT_UNITS = new List<Units>();
+        public static List<Rectangle> RECTANGLE_FOR_SELECT_UNITS = new List<Rectangle>();
+        public static void RectangleForSelectUnitsCreator()
+        {
+            RECTANGLE_FOR_SELECT_UNITS.Clear();
+            for (int i = 0; i < SELECT_UNITS.Count; i++)
+            {
+                RECTANGLE_FOR_SELECT_UNITS.Add(new Rectangle(SELECT_UNITS[i].collisionRectangle.X, SELECT_UNITS[i].collisionRectangle.Y, 
+                    SELECT_UNITS[i].collisionRectangle.Width, SELECT_UNITS[i].collisionRectangle.Height));
+            }
+        }
         public static void CreatePeasantWithSpear(Vector2 position)
         {
             var peasantWithSpear = PeasantWithSpearCreator.Create(position);

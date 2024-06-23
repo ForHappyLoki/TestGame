@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +17,6 @@ namespace TestBuild.Code
 
             // Вычисляем угол в радианах
             float angleInRadians = (float)Math.Atan2(direction.Y, direction.X);
-
-            // Преобразуем угол в градусы
-            //float angleInDegrees = MathHelper.ToDegrees(angleInRadians);
 
             return angleInRadians;
         }
