@@ -59,13 +59,14 @@ namespace TestBuild.Code
     }
     public class Units : GameObjects
     {
+        public RectangleForSelectUnits targetRectangle;
         public int speed { get; set; }
         public int damage { get; set; }
         public int hp { get; set; }
         public int moral { get; set; }
         private bool isSelect = false;
         private float _angle;
-        private bool _onMove = false;
+        public bool _onMove = false;
         public Units(Vector2 AbsolutePosition, Vector2 ImageSize, Texture2D Image, int speed, int damage, int hp)
             : base(AbsolutePosition, ImageSize, Image)
         {
@@ -74,6 +75,7 @@ namespace TestBuild.Code
             this.hp = hp;
             DataLoader.UNIT_OBJECTS.Add(this);
             centerOfModel = AbsolutePosition + new Vector2(0, ImageSize.Y / 2) + (ImageSize - new Vector2(0, ImageSize.Y / 2)) / 2;
+            targetRectangle = new RectangleForSelectUnits(collisionRectangle);
         }
         public void UnitUpdate()
         {
@@ -85,7 +87,10 @@ namespace TestBuild.Code
         public void SelectingUnit()
         {
             isSelect = true;
-            DataLoader.SELECT_UNITS.Add(this);
+            if(!DataLoader.SELECT_UNITS.Contains(this))
+            {
+                DataLoader.SELECT_UNITS.Add(this);
+            }
         }
         public void UnselectingUnit()
         {
@@ -95,6 +100,13 @@ namespace TestBuild.Code
         public bool SelectingReturn()
         {
             return isSelect;
+        }
+        public void SetTargerToMove(RectangleForSelectUnits rectangleForSelectUnits)
+        {
+            targetRectangle = new RectangleForSelectUnits(rectangleForSelectUnits);
+            targetToMove = targetRectangle.centralPosition;
+            _onMove = true;
+            CalculatingTheAngle();
         }
         public void SetTargerToMove(Vector2 target)
         {

@@ -54,7 +54,7 @@ namespace TestBuild
             DataLoader.TextureListAdd(sandBG, "sandBG");
 
 
-            for(int i  = 0; i < 10; i++)
+            for(int i  = 0; i < 20; i++)
             {
                 DataLoader.CreatePeasantWithSpear(new Vector2(100*i, 100));
             }
@@ -74,9 +74,14 @@ namespace TestBuild
                     if (!groupAccommodationMode)
                     {
                         groupAccommodationMode = true;
+                        DataLoader.RectangleForSelectUnitsCreator();
                     }
                     GroupAccommodationMode();
                 }
+            }
+            else
+            {
+                groupAccommodationMode = false;
             }
             //Кусок ниже снимает селект со всех юнитов, выборка селекта ниже
             if (_deselectionUnits || _frameIt)
@@ -88,11 +93,11 @@ namespace TestBuild
             }
             if (_orderActivation)
             {
-                _orderActivation = false;
-                DataLoader.GAME_OBJECTS.OfType<Units>()
-                    .Where(b => b.SelectingReturn())
-                    .ToList()
-                    .ForEach(b => b.SetTargerToMove(_orderPosition));
+                //_orderActivation = false;
+                //DataLoader.GAME_OBJECTS.OfType<Units>()
+                //    .Where(b => b.SelectingReturn())
+                //    .ToList()
+                //    .ForEach(b => b.SetTargerToMove(_orderPosition));
             }
             DataLoader.GAME_OBJECTS.OfType<Units>()
                 .ToList()
@@ -139,13 +144,6 @@ namespace TestBuild
             
             foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
             {
-                if (gameObjects.SelectingReturn() && _zoom > 0.5)
-                {
-                    _spriteBatch.DrawRectangle(gameObjects.collisionRectangle, Color.White);
-                }
-            }
-            foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
-            {
                 Color color;
                 if (gameObjects.SelectingReturn())
                 {
@@ -162,6 +160,28 @@ namespace TestBuild
             /////////
             _spriteBatch.Begin();
             DrawStrokePanel();
+            foreach(Units gameObjects in DataLoader.UNIT_OBJECTS)
+            {
+                if (gameObjects.SelectingReturn())
+                {
+                    if (gameObjects._onMove)
+                    {
+                    _spriteBatch.DrawRectangle(new Rectangle((int)((gameObjects.targetRectangle.rectangle.X + _mapPosition.X) * _zoom), (int)((gameObjects.targetRectangle.rectangle.Y + _mapPosition.Y) * _zoom),
+                        (int)(gameObjects.targetRectangle.rectangle.Width * _zoom), (int)(gameObjects.targetRectangle.rectangle.Height * _zoom)), Color.Green);
+                    }
+                    _spriteBatch.DrawRectangle(new Rectangle((int)((gameObjects.collisionRectangle.X + _mapPosition.X) * _zoom), (int)((gameObjects.collisionRectangle.Y + _mapPosition.Y) * _zoom),
+                        (int)(gameObjects.collisionRectangle.Width * _zoom), (int)(gameObjects.collisionRectangle.Height * _zoom)), Color.White);
+                }
+            }
+            if (groupAccommodationMode)
+            {
+                foreach (RectangleForSelectUnits rect in DataLoader.RECTANGLE_FOR_SELECT_UNITS)
+                {
+                    Console.WriteLine(rect.ToString());
+                    _spriteBatch.DrawRectangle(new Rectangle((int)((rect.rectangle.X + _mapPosition.X)*_zoom), (int)((rect.rectangle.Y + _mapPosition.Y) * _zoom),
+                        (int)(rect.rectangle.Width*_zoom), (int)(rect.rectangle.Height * _zoom)), Color.White);
+                }
+            }
             _spriteBatch.End();
             /////////
             base.Draw(gameTime);
@@ -276,6 +296,15 @@ namespace TestBuild
                     _orderActivation = true;
                 }
             }    
+            else
+            {
+                if (_rightButtonON && _orderActivation && groupAccommodationMode)
+                {
+                    GiveTheOrder();
+                }
+                _rightButtonON = false;
+                _orderActivation = false;
+            }
             _previousMouseState = mouseState;
         }
         private Rectangle _trueStrokePanel = new Rectangle();
@@ -318,9 +347,169 @@ namespace TestBuild
         }
         private bool groupAccommodationMode = false;
         private float accommodationDistance;
+        private bool accommodationAngleHorizontal = true;
         public void GroupAccommodationMode()
         {
             accommodationDistance = Vector2.Distance(_startGroupAccommodationModePosition, _endGroupAccommodationModePosition);
+            float accommodationAngle = HelpMethods.AngleBetweenPointsDegree(_startGroupAccommodationModePosition, _endGroupAccommodationModePosition); 
+            float a = (_endGroupAccommodationModePosition.Y - _startGroupAccommodationModePosition.Y) / (_endGroupAccommodationModePosition.X - _startGroupAccommodationModePosition.X);
+            if (_endGroupAccommodationModePosition.X == _startGroupAccommodationModePosition.X)
+            {
+                a = 0;
+            }
+            System.Diagnostics.Debug.WriteLine("a = " + a.ToString());
+            float b = _startGroupAccommodationModePosition.Y - a * _startGroupAccommodationModePosition.X;
+            if (b == 0)
+            {
+                b = 0.01f;
+            }
+            if (_startGroupAccommodationModePosition != _endGroupAccommodationModePosition)
+            {
+                if ((accommodationAngle < -135 || accommodationAngle > 135) || (accommodationAngle > -45 && accommodationAngle < 45))
+                {
+                    accommodationAngleHorizontal = true;
+                }
+                else
+                {
+                    accommodationAngleHorizontal = false;
+                }
+
+                if (accommodationAngleHorizontal)
+                {
+                    float lineY = 0f;
+                    float lineYmodifaer = 0f;
+                    float endX;
+                    float startX;
+                    float currentX;
+                    if (_endGroupAccommodationModePosition.X > _startGroupAccommodationModePosition.X)
+                    {
+                        endX = _endGroupAccommodationModePosition.X;
+                        startX = _startGroupAccommodationModePosition.X;
+                        currentX = startX;
+
+                        DataLoader.RECTANGLE_FOR_SELECT_UNITS.Sort((r1, r2) => r2.rectangle.Width.CompareTo(r1.rectangle.Width));
+
+                        foreach (var rect in DataLoader.RECTANGLE_FOR_SELECT_UNITS)
+                        {
+                            lineY = currentX * a + b + lineYmodifaer;
+
+                            rect.SetPosition(new Vector2(currentX - rect.rectangle.Width/2, lineY));
+
+                            currentX += rect.rectangle.Width + 10f; // добавляем небольшой отступ между прямоугольниками
+                            if (currentX + rect.rectangle.Width / 2 > endX)
+                            {
+                                currentX = startX;
+                                lineYmodifaer += rect.rectangle.Height + 10f; // добавляем небольшой отступ между линиями
+                            }
+                        }
+                    }
+                    else
+                    {
+                        startX = _endGroupAccommodationModePosition.X;
+                        endX = _startGroupAccommodationModePosition.X;
+                        currentX = endX;
+                        DataLoader.RECTANGLE_FOR_SELECT_UNITS.Sort((r1, r2) => r2.rectangle.Width.CompareTo(r1.rectangle.Width));
+
+                        foreach (var rect in DataLoader.RECTANGLE_FOR_SELECT_UNITS)
+                        {
+                            lineY = currentX * a + b + lineYmodifaer;
+
+                            rect.SetPosition(new Vector2(currentX - rect.rectangle.Width / 2, lineY));
+
+                            currentX -= rect.rectangle.Width + 10f; // добавляем небольшой отступ между прямоугольниками
+                            if (currentX - rect.rectangle.Width / 2 < startX)
+                            {
+                                currentX = endX;
+                                lineYmodifaer += rect.rectangle.Height + 10f; // добавляем небольшой отступ между линиями
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    float lineX = 0f;
+                    float lineXmodifaer = 0f;
+                    float endY = _endGroupAccommodationModePosition.Y;
+                    float startY = _startGroupAccommodationModePosition.Y;
+                    if (_endGroupAccommodationModePosition.Y > _startGroupAccommodationModePosition.Y)
+                    {
+                        endY = _endGroupAccommodationModePosition.Y;
+                        startY = _startGroupAccommodationModePosition.Y;
+                        float currentY = startY;
+
+                        DataLoader.RECTANGLE_FOR_SELECT_UNITS.Sort((r1, r2) => r2.rectangle.Width.CompareTo(r1.rectangle.Height));
+
+                        foreach (var rect in DataLoader.RECTANGLE_FOR_SELECT_UNITS)
+                        {
+                            if (a != 0)
+                            {
+                                lineX = (currentY - b) / a + lineXmodifaer;
+                            }
+                            else { lineX = _endGroupAccommodationModePosition.X + lineXmodifaer; }
+
+                            rect.SetPosition(new Vector2(lineX - rect.rectangle.Width / 2, currentY));
+
+                            currentY += rect.rectangle.Height + 10f; // добавляем небольшой отступ между прямоугольниками
+                            if (currentY + rect.rectangle.Height / 2 > endY)
+                            {
+                                currentY = startY;
+                                lineXmodifaer += rect.rectangle.Width + 10f; // добавляем небольшой отступ между линиями
+                            }
+                        }
+                    }
+                    else
+                    {
+                        startY = _endGroupAccommodationModePosition.Y;
+                        endY = _startGroupAccommodationModePosition.Y;
+                        float currentY = endY;
+
+                        DataLoader.RECTANGLE_FOR_SELECT_UNITS.Sort((r1, r2) => r2.rectangle.Width.CompareTo(r1.rectangle.Height));
+
+                        foreach (var rect in DataLoader.RECTANGLE_FOR_SELECT_UNITS)
+                        {
+                            //System.Diagnostics.Debug.WriteLine("lineY " + lineY.ToString());
+                            if (a != 0)
+                            {
+                                lineX = (currentY - b) / a + lineXmodifaer;
+                            }
+                            else { lineX = _endGroupAccommodationModePosition.X + lineXmodifaer; }
+
+                            rect.SetPosition(new Vector2(lineX - rect.rectangle.Width / 2, currentY));
+
+                            currentY -= rect.rectangle.Height + 10f; // добавляем небольшой отступ между прямоугольниками
+                            if (currentY - rect.rectangle.Height / 2 < startY)
+                            {
+                                currentY = endY;
+                                lineXmodifaer += rect.rectangle.Width + 10f; // добавляем небольшой отступ между линиями
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var accommodationDistance = _endGroupAccommodationModePosition - DataLoader.SELECT_UNITS[0].centerOfModel ;
+                for(int i = 0; i < DataLoader.SELECT_UNITS.Count; i++)
+                {
+                    DataLoader.RECTANGLE_FOR_SELECT_UNITS[i].SetPosition(DataLoader.SELECT_UNITS[i].centerOfModel + accommodationDistance);
+                }
+            }
+            if (DataLoader.SELECT_UNITS.Count > 0)
+                System.Diagnostics.Debug.WriteLine("DataLoader.SELECT_UNITS[i].centerOfModel = " + DataLoader.SELECT_UNITS[0].centerOfModel.ToString());
+                System.Diagnostics.Debug.WriteLine("DataLoader.RECTANGLE_FOR_SELECT_UNITS[0].centralPosition = " + DataLoader.RECTANGLE_FOR_SELECT_UNITS[0].centralPosition.ToString());
+
+        }
+        public void GiveTheOrder()
+        {
+            if (DataLoader.SELECT_UNITS.Count > 0)
+            {
+                DataLoader.SELECT_UNITS.Sort((r1, r2) => r2.absolutePosition.X.CompareTo(r1.absolutePosition.X));
+                DataLoader.RECTANGLE_FOR_SELECT_UNITS.Sort((r1, r2) => r2.centralPosition.X.CompareTo(r1.centralPosition.X));
+                for (int i = 0; i < DataLoader.SELECT_UNITS.Count; i++)
+                {
+                    DataLoader.SELECT_UNITS[i].SetTargerToMove(DataLoader.RECTANGLE_FOR_SELECT_UNITS[i]);
+                }
+            }
         }
     }
 }

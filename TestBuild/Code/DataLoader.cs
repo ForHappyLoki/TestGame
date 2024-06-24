@@ -45,20 +45,41 @@ namespace TestBuild.Code
         public static List<GameObjects> GAME_OBJECTS = new List<GameObjects>();
         public static List<Units> UNIT_OBJECTS = new List<Units>();
         public static List<Units> SELECT_UNITS = new List<Units>();
-        public static List<Rectangle> RECTANGLE_FOR_SELECT_UNITS = new List<Rectangle>();
+        public static List<RectangleForSelectUnits> RECTANGLE_FOR_SELECT_UNITS = new List<RectangleForSelectUnits>();
         public static void RectangleForSelectUnitsCreator()
         {
             RECTANGLE_FOR_SELECT_UNITS.Clear();
             for (int i = 0; i < SELECT_UNITS.Count; i++)
             {
-                RECTANGLE_FOR_SELECT_UNITS.Add(new Rectangle(SELECT_UNITS[i].collisionRectangle.X, SELECT_UNITS[i].collisionRectangle.Y, 
-                    SELECT_UNITS[i].collisionRectangle.Width, SELECT_UNITS[i].collisionRectangle.Height));
+                RECTANGLE_FOR_SELECT_UNITS.Add(new RectangleForSelectUnits(SELECT_UNITS[i].collisionRectangle));
             }
         }
         public static void CreatePeasantWithSpear(Vector2 position)
         {
             var peasantWithSpear = PeasantWithSpearCreator.Create(position);
             GAME_OBJECTS.Add(peasantWithSpear);
+        }
+    }
+    public class RectangleForSelectUnits
+    {
+        public Vector2 position;
+        public Vector2 centralPosition;
+        public Rectangle rectangle;
+        public RectangleForSelectUnits(Rectangle rectangle)
+        {
+            this.rectangle = new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+        }
+        public RectangleForSelectUnits(RectangleForSelectUnits rectangleForSelectUnits)
+        {
+            position = rectangleForSelectUnits.position;
+            centralPosition = rectangleForSelectUnits.centralPosition;
+            rectangle = rectangleForSelectUnits.rectangle;
+        }
+        public void SetPosition(Vector2 position)
+        {
+            centralPosition = position;
+            this.position = position - new Vector2(rectangle.Width/2, rectangle.Height/2);
+            rectangle = new Rectangle((int)this.position.X, (int)this.position.Y, rectangle.Width, rectangle.Height);
         }
     }
 }
