@@ -53,10 +53,12 @@ namespace TestBuild
             var sandBG = Content.Load<Texture2D>("BG/SandBG");
             DataLoader.TextureListAdd(sandBG, "sandBG");
 
-
-            for(int i  = 0; i < 20; i++)
+            for (int j = 0; j < 20; j++)
             {
-                DataLoader.CreatePeasantWithSpear(new Vector2(100*i, 100));
+                for(int i  = 0; i < 20; i++)
+                {
+                    DataLoader.CreatePeasantWithSpear(new Vector2(100*i, 100 + 100*j));
+                }
             }
         }
         private List<GameObjects[]> _potentialCollisions;
